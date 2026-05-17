@@ -618,8 +618,24 @@
     loading.classList.add('show');
 
     try {
+      // Clone card and render at full 1080x1350 off-screen (no CSS scale transform)
       const card = document.getElementById('card');
-      const canvas = await html2canvas(card, {
+      const clone = card.cloneNode(true);
+      clone.style.cssText = `
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        width: 1080px;
+        height: 1350px;
+        transform: none;
+        z-index: -1;
+      `;
+      document.body.appendChild(clone);
+
+      // Wait for fonts/images to settle
+      await new Promise(r => setTimeout(r, 300));
+
+      const canvas = await html2canvas(clone, {
         scale: 1,
         useCORS: true,
         allowTaint: true,
@@ -628,6 +644,8 @@
         height: 1350,
         logging: false,
       });
+
+      document.body.removeChild(clone);
 
       const link = document.createElement('a');
       const category = document.getElementById('e-category').value.toLowerCase().replace(/\s/g,'-');
